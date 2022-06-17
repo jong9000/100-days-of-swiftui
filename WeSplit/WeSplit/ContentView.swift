@@ -12,8 +12,10 @@ struct ContentView: View {
     @State private var numberOfPeople = 2
     @State private var tipPercentage = 20
     @FocusState private var amountIsFocused: Bool
-    
-    private let tipPercentages = [10, 15, 20, 25, 0]
+        
+    private var userCurrency: FloatingPointFormatStyle<Double>.Currency {
+        .currency(code: Locale.current.currencyCode ?? "USD")
+    }
     
     private var totalPerPerson: Double {
         let peopleCount = Double(numberOfPeople + 2)
@@ -26,12 +28,19 @@ struct ContentView: View {
         return amountPerPerson
     }
     
+    private var checkTotalPlusTip: Double {
+        let tipSelection = Double(tipPercentage)
+        let tipValue = checkAmount / 100 * tipSelection
+        let grandTotal = checkAmount + tipValue
+        
+        return grandTotal
+    }
+    
     var body: some View {
         NavigationView {
             Form {
                 Section {
-                    TextField("Amount", value: $checkAmount, format:
-                            .currency(code: Locale.current.currencyCode ?? "USD"))
+                    TextField("Amount", value: $checkAmount, format: userCurrency)
                     .keyboardType(.decimalPad)
                     .focused($amountIsFocused)
                     
@@ -44,17 +53,25 @@ struct ContentView: View {
                 
                 Section {
                     Picker("Tip Percentage", selection: $tipPercentage) {
-                        ForEach(tipPercentages, id:\.self) {
+                        ForEach(0..<101) {
                             Text($0, format: .percent)
                         }
                     }
-                    .pickerStyle(.segmented)
+
                 } header: {
                     Text("How much tip do you want to leave?")
                 }
                 
                 Section {
-                    Text(totalPerPerson, format: .currency(code: Locale.current.currencyCode ?? "USD"))
+                    Text(checkTotalPlusTip, format: userCurrency)
+                } header: {
+                    Text("Check total + tip")
+                }
+                
+                Section {
+                    Text(totalPerPerson, format: userCurrency)
+                } header: {
+                    Text("Amount per person")
                 }
                 
             }
